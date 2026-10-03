@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Syncer - Multi-POV Precision Synchronizer</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="dark-theme">
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="brand-title">
+        <span class="brand-badge">POV</span>
+        <h1>VIDEO SYNCER</h1>
+      </div>
+      <div class="app-mode-switch">
+        <button id="btn-mode-setup" class="mode-tab active" type="button">
+          <span class="icon-slot" data-icon="settings"></span>
+          <span>CALIBRATE ANCHORS</span>
+        </button>
+        <button id="btn-mode-watch" class="mode-tab" type="button" disabled>
+          <span class="icon-slot" data-icon="monitor"></span>
+          <span>MULTI-VIEW WATCH</span>
+          <span id="synced-count-badge" class="badge">0</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button id="btn-load-sample" class="util-btn" type="button" title="Load synthetic test video feeds for immediate testing">
+        <span class="icon-slot" data-icon="play-circle"></span>
+        <span>LOAD TEST FEEDS</span>
+      </button>
+      <button id="btn-add-videos" class="primary-btn" type="button">
+        <span class="icon-slot" data-icon="plus"></span>
+        <span>ADD LOCAL VIDEOS</span>
+      </button>
+      <input type="file" id="file-input-multiple" multiple accept="video/*" class="visually-hidden">
+      
+      <button id="btn-save-session" class="util-btn" type="button" title="Export session configuration (JSON)">
+        <span class="icon-slot" data-icon="save"></span>
+        <span>EXPORT CONFIG</span>
+      </button>
+      <button id="btn-load-session" class="util-btn" type="button" title="Import session configuration">
+        <span class="icon-slot" data-icon="upload"></span>
+        <span>IMPORT CONFIG</span>
+      </button>
+      <input type="file" id="file-input-session" accept=".json" class="visually-hidden">
+
+      <button id="btn-fullscreen-app" class="util-btn icon-only" type="button" title="Toggle App Fullscreen">
+        <span class="icon-slot" data-icon="maximize"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Application Body -->
+  <main class="app-main">
+    
+    <!-- MODE 1: CALIBRATION & ANCHOR SETUP -->
+    <section id="view-setup" class="view-panel active">
+      <div class="setup-toolbar">
+        <div class="toolbar-info">
+          <h2>Anchor Calibration Stage</h2>
+          <p>Import your gameplay or POV recordings, inspect each feed frame-by-frame, and mark the synchronized event anchor point (e.g., match start, timer 00:00, or a shared game event).</p>
+        </div>
+        <div class="toolbar-actions">
+          <div class="quick-fps-select">
+            <label for="global-default-fps">Default Frame Rate:</label>
+            <select id="global-default-fps" class="select-input">
+              <option value="60">60 FPS (Competitive Gameplay)</option>
+              <option value="59.94">59.94 FPS (NTSC 60)</option>
+              <option value="30">30 FPS (Standard)</option>
+              <option value="29.97">29.97 FPS (NTSC 30)</option>
+              <option value="24">24 FPS (Cinematic)</option>
+              <option value="120">120 FPS (High Refresh)</option>
+            </select>
+          </div>
+          <button id="btn-proceed-to-watch" class="accent-btn" type="button" disabled>
+            <span class="icon-slot" data-icon="arrow-right"></span>
+            <span>PROCEED TO MULTI-VIEW</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Video Calibration Grid Container -->
+      <div id="calibration-container" class="calibration-grid">
+        <!-- Empty State Prompt -->
+        <div id="setup-empty-state" class="empty-state">
+          <div class="empty-icon-wrap">
+            <span class="icon-slot" data-icon="film"></span>
+          </div>
+          <h3>NO VIDEO FEEDS LOADED</h3>
+          <p>Drag and drop local video files anywhere here, or use the buttons below to begin synchronizing POVs.</p>
+          <div class="empty-actions">
+            <button id="btn-empty-add-video" class="primary-btn" type="button">
+              <span class="icon-slot" data-icon="plus"></span>
+              <span>SELECT LOCAL VIDEOS</span>
+            </button>
+            <button id="btn-empty-demo" class="util-btn" type="button">
+              <span class="icon-slot" data-icon="play-circle"></span>
+              <span>TRY DEMO GENERATED FEEDS</span>
+            </button>
+          </div>
+          <div class="format-hint">Supports MP4, WebM, MKV, MOV, and standard browser-supported video formats.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODE 2: MULTI-VIEW WATCH (SECURITY CAMERA POV GRID) -->
+    <section id="view-watch" class="view-panel">
+      <!-- Top Monitor Status Bar -->
+      <div class="monitor-status-bar">
+        <div class="monitor-meta">
+          <div class="rec-indicator active">
+            <span class="rec-dot"></span>
+            <span class="rec-text">MULTI-POV MONITOR ACTIVE</span>
+          </div>
+          <div class="feed-count-tag" id="monitor-feed-count">FEEDS: 0</div>
+          <div class="time-delta-tag" id="monitor-status-text">LOCKED TO MASTER CLOCK</div>
+        </div>
+
+        <div class="monitor-view-options">
+          <label class="toggle-control" title="Toggle On-Screen Display (OSD) security camera overlays">
+            <input type="checkbox" id="toggle-osd" checked>
+            <span class="toggle-label">OSD OVERLAY</span>
+          </label>
+          <div class="layout-selector">
+            <span class="field-label">LAYOUT:</span>
+            <button class="layout-btn active" data-layout="auto" title="Automatic Grid">AUTO</button>
+            <button class="layout-btn" data-layout="1x2" title="Side by Side (2 feeds)">1x2</button>
+            <button class="layout-btn" data-layout="2x1" title="Stacked Vertical (2 feeds)">2x1</button>
+            <button class="layout-btn" data-layout="2x2" title="Quad Grid (4 feeds)">2x2</button>
+            <button class="layout-btn" data-layout="3x2" title="Hex Grid (6 feeds)">3x2</button>
+          </div>
+          <button id="btn-fullscreen-monitor" class="util-btn icon-only" type="button" title="Fullscreen Multi-View Wall">
+            <span class="icon-slot" data-icon="maximize"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- POV Security Grid -->
+      <div id="monitor-grid" class="monitor-grid layout-auto">
+        <!-- Feeds dynamically rendered here -->
+      </div>
+
+      <!-- Master Control Timeline Deck -->
+      <footer class="master-deck">
+        <div class="deck-top-row">
+          
+          <!-- Master Time Display -->
+          <div class="master-time-readout">
+            <div class="time-primary">
+              <span class="time-label">OFFSET TIME (FROM ANCHOR):</span>
+              <span id="master-time-relative" class="time-val-hero">+00:00:00.000</span>
+            </div>
+            <div class="time-secondary">
+              <span class="time-label">FRAME OFFSET:</span>
+              <span id="master-frame-relative" class="time-val-sub">0</span>
+            </div>
+          </div>
+
+          <!-- Playback Controls -->
+          <div class="master-transport-controls">
+            <!-- Jump & Step Controls -->
+            <button id="master-btn-anchor" class="deck-btn" type="button" title="Jump to Anchor (00:00.000) [Home / A]">
+              <span class="icon-slot" data-icon="anchor"></span>
+              <span class="btn-text">ANCHOR</span>
+            </button>
+
+            <button id="master-btn-resync" class="deck-btn" type="button" title="Force Instant Re-Anchor Sync [R]">
+              <span class="icon-slot" data-icon="repeat"></span>
+              <span class="btn-text">RESYNC</span>
+            </button>
+            
+            <button id="master-btn-step-back-sec" class="deck-btn" type="button" title="Step Back 1s [J]">
+              <span class="icon-slot" data-icon="rewind-sec"></span>
+              <span class="btn-text">-1s</span>
+            </button>
+            
+            <button id="master-btn-step-back-frame" class="deck-btn" type="button" title="Step Back 1 Frame [Left Arrow]">
+              <span class="icon-slot" data-icon="step-back"></span>
+              <span class="btn-text">-1F</span>
+            </button>
+
+            <!-- Play / Pause Master -->
+            <button id="master-btn-play-pause" class="deck-play-btn" type="button" title="Play / Pause All [Spacebar]">
+              <span class="icon-slot play-icon" data-icon="play"></span>
+              <span class="icon-slot pause-icon hidden" data-icon="pause"></span>
+            </button>
+
+            <button id="master-btn-step-forward-frame" class="deck-btn" type="button" title="Step Forward 1 Frame [Right Arrow]">
+              <span class="icon-slot" data-icon="step-forward"></span>
+              <span class="btn-text">+1F</span>
+            </button>
+
+            <button id="master-btn-step-forward-sec" class="deck-btn" type="button" title="Step Forward 1s [L]">
+              <span class="icon-slot" data-icon="forward-sec"></span>
+              <span class="btn-text">+1s</span>
+            </button>
+
+            <button id="master-btn-loop" class="deck-btn" type="button" title="Toggle Loop Mode">
+              <span class="icon-slot" data-icon="repeat"></span>
+              <span class="btn-text">LOOP</span>
+            </button>
+          </div>
+
+          <!-- Playback Speed & Global Audio -->
+          <div class="master-options-group">
+            <div class="speed-selector">
+              <span class="field-label">SPEED:</span>
+              <select id="master-speed-select" class="select-input">
+                <option value="0.25">0.25x</option>
+                <option value="0.5">0.5x</option>
+                <option value="0.75">0.75x</option>
+                <option value="1" selected>1.0x</option>
+                <option value="1.25">1.25x</option>
+                <option value="1.5">1.5x</option>
+                <option value="2">2.0x</option>
+              </select>
+            </div>
+
+            <div class="audio-master-select">
+              <span class="field-label">AUDIO SOURCE:</span>
+              <select id="master-audio-select" class="select-input">
+                <option value="cam-0">CAM 1</option>
+                <option value="none">MUTE ALL</option>
+                <option value="all">ALL CAMERAS</option>
+              </select>
+            </div>
+            
+            <div class="master-vol-slider-wrap">
+              <span class="icon-slot" data-icon="volume"></span>
+              <input type="range" id="master-volume-slider" min="0" max="1" step="0.05" value="1" class="slider-input">
+            </div>
+          </div>
+        </div>
+
+        <!-- Master Interactive Timeline Track -->
+        <div class="timeline-container">
+          <div class="timeline-bounds-label" id="timeline-time-start">-00:00:00.000</div>
+          
+          <div class="timeline-track-wrap" id="master-timeline-track">
+            <!-- Anchor indicator marker on timeline -->
+            <div class="timeline-anchor-marker" id="timeline-anchor-marker" title="Anchor Point (t = 0)">
+              <div class="anchor-pin"></div>
+              <span class="anchor-tag">ANCHOR (0.000)</span>
+            </div>
+
+            <!-- Pre-anchor segment / post-anchor segment visual indicators -->
+            <div class="timeline-progress-bar" id="timeline-progress-bar"></div>
+            
+            <!-- Video coverage span visualization -->
+            <div class="timeline-coverage-container" id="timeline-coverage-container">
+              <!-- Dynamically rendered feed coverage bands -->
+            </div>
+
+            <!-- Scrubber thumb -->
+            <div class="timeline-thumb" id="timeline-thumb">
+              <div class="thumb-line"></div>
+              <div class="thumb-badge" id="timeline-hover-badge">+00:00:00.000</div>
+            </div>
+          </div>
+
+          <div class="timeline-bounds-label" id="timeline-time-end">+00:00:00.000</div>
+        </div>
+
+        <!-- Timeline shortcut reference bar -->
+        <div class="deck-hints-row">
+          <span class="hint-item"><kbd>SPACE</kbd> Play/Pause</span>
+          <span class="hint-item"><kbd>←</kbd> / <kbd>→</kbd> Frame Step</span>
+          <span class="hint-item"><kbd>J</kbd> / <kbd>L</kbd> -1s / +1s</span>
+          <span class="hint-item"><kbd>A</kbd> Snap Anchor</span>
+          <span class="hint-item"><kbd>R</kbd> Force Resync</span>
+          <span class="hint-item"><kbd>M</kbd> Mute Audio</span>
+          <span class="hint-item"><kbd>F</kbd> Fullscreen</span>
+          <span class="hint-item status-flag" id="sync-health-flag">DRIFT: 0ms (OPTIMAL)</span>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <!-- Hidden synthetic canvas generator for demo feeds -->
+  <canvas id="demo-generator-canvas" width="640" height="360" class="visually-hidden"></canvas>
+
+  <!-- Modular Scripts -->
+  <script src="js/icons.js"></script>
+  <script src="js/video-item.js"></script>
+  <script src="js/sync-engine.js"></script>
+  <script src="js/demo-generator.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

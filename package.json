@@ -1,0 +1,21 @@
+{
+  "name": "video-syncer-desktop",
+  "version": "1.0.0",
+  "description": "Utilitarian multi-POV video synchronizer desktop application with hardware-accelerated streaming",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "video-syncer",
+    "multi-pov",
+    "viewsync",
+    "cctv",
+    "hardware-accelerated"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^44.5.1"
+  }
+}
